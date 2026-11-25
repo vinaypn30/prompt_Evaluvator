@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompt Evaluation Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07080b;--fg:#eceef3;--mut:#8a90a0;--ln:rgba(255,255,255,.12);--cd:rgba(255,255,255,.04);--b1:#5d7bff;--b2:#ff6a45;--dot:#cfd6ff;--on:#07080b;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="light"]{--bg:#f3f2ee;--fg:#0e0f13;--mut:#5f6572;--ln:rgba(14,15,19,.14);--cd:rgba(255,255,255,.72);--b1:#2347ff;--b2:#e8431f;--dot:#1b2250;--on:#fff;color-scheme:light}
+html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 'Bricolage Grotesque',system-ui,sans-serif;overflow-x:hidden}
+.mono{font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+h2,h3{font-weight:700;margin:0;letter-spacing:-.02em}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}::view-transition-new(root){z-index:99}
+#orb{position:fixed;inset:0;z-index:36;pointer-events:none}
+#ov{position:fixed;inset:0;z-index:35;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .6s}#ov.on{opacity:.96;pointer-events:auto}
+#cap{position:fixed;left:0;right:0;bottom:14vh;z-index:37;text-align:center;opacity:0;transition:opacity .5s;pointer-events:none;padding:0 20px}#cap.on{opacity:1}
+#cap b{display:block;font:800 clamp(1.4rem,4vw,2.4rem)/1.1 'Bricolage Grotesque';letter-spacing:-.02em;margin-bottom:8px}#cap span{color:var(--mut)}#cap em{font-style:normal;color:var(--b2)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;display:flex;justify-content:space-between;align-items:center;padding:16px 28px}
+.brand{font-weight:800;font-size:1.15rem;letter-spacing:-.02em;display:flex;gap:10px;align-items:center}.brand i{width:16px;height:16px;border-radius:50%;background:conic-gradient(var(--b1),var(--b2),var(--b1));animation:sp 4s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.tg{width:46px;height:46px;border-radius:50%;border:1px solid var(--ln);background:var(--cd);color:var(--fg);cursor:pointer;display:grid;place-items:center;transition:transform .6s cubic-bezier(.3,1.6,.4,1)}.tg:hover{transform:rotate(90deg) scale(1.1)}
+main{position:relative;z-index:1}.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+.hero{min-height:calc(100svh - 80px);display:flex;flex-direction:column;justify-content:center;max-width:620px;padding-bottom:6vh}
+.hero h1{font-size:clamp(3.2rem,9vw,7.2rem);line-height:.95;margin:20px 0 24px;letter-spacing:-.04em;font-weight:300}
+.hc{display:inline-block;font-variation-settings:'wght' 300;opacity:0;transform:translateY(60px) rotate(8deg);animation:hc .9s cubic-bezier(.2,.9,.2,1) forwards}@keyframes hc{to{opacity:1;transform:none}}
+.hero .a{color:var(--b2)}.sub{color:var(--mut);font-size:1.15rem;max-width:460px;margin:0 0 30px}.hint{color:var(--mut);margin-top:26px}
+.btn{border:0;cursor:pointer;background:var(--fg);color:var(--bg);font:700 16px 'Bricolage Grotesque';padding:16px 28px;border-radius:99px;position:relative;overflow:hidden;transition:transform .3s cubic-bezier(.3,1.6,.4,1)}
+.btn::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,var(--b1),var(--b2));transform:translateX(-101%);transition:transform .5s cubic-bezier(.2,.9,.2,1)}.btn:hover::before{transform:none}.btn:hover{color:#fff;transform:scale(1.06)}.btn:active{transform:scale(.95)}.btn span{position:relative}.btn[disabled]{opacity:.5;pointer-events:none}
+.btn.o{background:none;color:var(--fg);border:1px solid var(--ln)}.row{display:flex;gap:12px;flex-wrap:wrap}
+section{margin:12vh 0}.sh{display:flex;align-items:baseline;gap:16px;margin-bottom:34px;overflow:hidden}.sh h2{font-size:clamp(2.2rem,5.5vw,4rem)}.sh .mono{color:var(--b2)}
+.rv{opacity:0;transform:perspective(900px) rotateX(-40deg) translateY(50px);transform-origin:50% 0;transition:opacity .9s,transform 1s cubic-bezier(.2,.9,.2,1);transition-delay:var(--d,0s)}.rv.in{opacity:1;transform:none}
+.sh.rv{transform:translateY(100%);clip-path:inset(0 0 -10px 0)}.sh.rv.in{transform:none}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.tilt{position:relative;background:var(--cd);border:1px solid var(--ln);border-radius:20px;padding:24px;transform-style:preserve-3d;will-change:transform}
+.tilt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(280px circle at var(--gx,50%) var(--gy,50%),color-mix(in srgb,var(--b1) 22%,transparent),transparent 60%)}.tilt:hover::after{opacity:1}
+.tile{text-align:left;cursor:pointer;color:var(--fg);font:700 1.25rem 'Bricolage Grotesque';min-height:130px;display:flex;flex-direction:column;justify-content:space-between}.tile .mono{color:var(--mut)}.tile.on{border-color:var(--b1);box-shadow:0 0 0 1px var(--b1),0 20px 50px -20px var(--b1)}.tile.on .mono{color:var(--b2)}
+.lv{position:relative;display:inline-flex;margin:22px 0;padding:4px;border:1px solid var(--ln);border-radius:99px;background:var(--cd)}.lv button{position:relative;z-index:1;border:0;background:none;color:var(--fg);padding:10px 22px;font:600 15px 'Bricolage Grotesque';cursor:pointer;transition:color .3s}.lv button.on{color:#fff}.lv i{position:absolute;top:4px;bottom:4px;border-radius:99px;background:linear-gradient(100deg,var(--b1),var(--b2));transition:left .5s cubic-bezier(.3,1.5,.4,1),width .5s}
+.ch{font-weight:300;font-size:clamp(1.5rem,3.4vw,2.3rem);line-height:1.2;letter-spacing:-.02em;animation:ch .6s both}.ch small{display:block;color:var(--b2);margin-bottom:8px}@keyframes ch{from{opacity:0;filter:blur(10px);transform:translateY(14px)}}
+textarea{width:100%;min-height:210px;resize:vertical;background:var(--cd);color:var(--fg);border:1px solid var(--ln);border-radius:20px;padding:22px;font:400 17px/1.65 'Bricolage Grotesque';outline:0;transition:.4s}textarea:focus{border-color:var(--b1);box-shadow:0 0 0 5px color-mix(in srgb,var(--b1) 22%,transparent)}
+.rings{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:20px 0}@media(max-width:560px){.rings{grid-template-columns:repeat(3,1fr)}}
+.rg{text-align:center;color:var(--mut)}.rg svg{width:56px;height:56px;transform:rotate(-90deg)}.rg circle{fill:none;stroke-width:4}.rg .tr{stroke:var(--ln)}.rg .f{stroke:var(--b1);stroke-linecap:round;stroke-dasharray:113.1;stroke-dashoffset:113.1;transition:stroke-dashoffset .8s cubic-bezier(.3,1.4,.4,1),stroke .3s}.rg.hit .f{stroke:var(--b2)}.rg.hit{color:var(--fg)}.rg div{margin-top:4px}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:800px){.gr{grid-template-columns:1fr}}
+.big{font:800 clamp(6rem,16vw,11rem)/1 'Bricolage Grotesque';letter-spacing:-.05em;background:linear-gradient(100deg,var(--b1),var(--b2));-webkit-background-clip:text;background-clip:text;color:transparent}.big.od u{padding-right:.02em}
+.od{display:inline-flex;height:1em;overflow:hidden;line-height:1;vertical-align:bottom}.od i{display:block;font-style:normal;transition:transform 1.6s cubic-bezier(.2,.9,.2,1)}.od b{display:block;height:1em;font-weight:inherit}.od u{text-decoration:none}
+.rate{font-weight:700;font-size:1.4rem;margin-top:6px}
+.cr{border-top:1px solid var(--ln);padding:14px 0;cursor:pointer}.cr:last-child{border-bottom:1px solid var(--ln)}.cr .t{display:flex;align-items:center;gap:18px;font-size:1.3rem;font-weight:700;transition:transform .35s cubic-bezier(.3,1.6,.4,1)}.cr:hover .t{transform:translateX(10px)}.cr b{flex:0 0 120px}
+.tr2{flex:1;height:6px;border-radius:6px;background:var(--ln);position:relative}.tr2 i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:6px;background:linear-gradient(90deg,var(--b1),var(--b2));transition:width 1.6s cubic-bezier(.2,.9,.2,1)}.tr2 i::after{content:"";position:absolute;right:-6px;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--b2);box-shadow:0 0 0 5px color-mix(in srgb,var(--b2) 25%,transparent)}
+.cr p{max-height:0;overflow:hidden;margin:0;color:var(--mut);transition:max-height .5s,margin .5s}.cr.open p{max-height:100px;margin-top:10px}
+.ins{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.ic{padding:22px}.ic small{display:block;margin-bottom:8px;color:var(--c)}.ic{border-top:3px solid var(--c)}
+pre{margin:0;font:400 15px/1.8 'JetBrains Mono',monospace;white-space:pre-wrap;min-height:120px}pre ins{text-decoration:none;color:var(--b2);background:color-mix(in srgb,var(--b2) 14%,transparent)}.cu::after{content:"▌";color:var(--b1);animation:bk .7s infinite}@keyframes bk{50%{opacity:0}}
+h3{font-size:1.9rem;margin:46px 0 16px}
+footer{padding:60px 24px;text-align:center;color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<canvas id="orb"></canvas><div id="ov"></div><div id="cap"><b id="c1"></b><span id="c2" class="mono"></span></div>
+<nav><div class="brand"><i></i>Prompt Evaluation Studio</div><button class="tg" id="tg" aria-label="Toggle theme"><svg id="ti" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg></button></nav>
+<main class="wrap">
+<div class="hero"><div class="mono" style="color:var(--b2)">LLM-as-a-Judge</div><h1 id="h1"></h1><p class="sub">Write a prompt. An AI judge scores it on six criteria, then rewrites it sharper. Practice, evaluate, improve, master.</p><div class="row"><button class="btn" onclick="location.hash='challenge'"><span>Start evaluating</span></button><button class="btn o" id="demo"><span>Try a sample prompt</span></button></div><div class="hint mono">Move your cursor — the letters and the orb respond</div></div>
+
+<section id="challenge"><div class="sh rv"><span class="mono">01</span><h2>Pick a challenge</h2></div><div class="tiles" id="tiles"></div><div class="lv rv" id="lv"><i id="li"></i></div><div class="ch" id="ch"></div></section>
+<section id="write"><div class="sh rv"><span class="mono">02</span><h2>Write your prompt</h2></div><div class="rv"><textarea id="p" placeholder="Write your prompt here…"></textarea><div class="rings" id="rings"></div><button class="btn" id="go" style="width:100%"><span>Evaluate prompt →</span></button></div></section>
+<section id="res" hidden></section>
+</main>
+<footer class="mono">Built with Python · Groq · Streamlit · Plotly</footer>
+
+<script>
+const $=s=>document.querySelector(s),el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e},esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const SC={Business:["Create a professional email explaining a project delay.","Convert meeting notes into decisions, action items, owners and deadlines.","Analyze quarterly business performance and produce an executive report."],HR:["Create a job description for a Python Developer.","Generate interview questions for an AI/ML Engineer.","Evaluate candidate interview responses against predefined competencies."],Marketing:["Create a LinkedIn post announcing a new product.","Design a marketing campaign for a technology product.","Create a complete go-to-market strategy."],"Data Analytics":["Summarize monthly sales data.","Analyze sales data and identify trends and anomalies.","Analyze business data and produce actionable executive insights."],"Software Development":["Generate a Python factorial function.","Create a REST API using Python and FastAPI.","Perform a detailed code review covering security, performance and maintainability."]};
+const LV=["Beginner","Intermediate","Advanced"];
+const CR={Role:{re:[/\byou are\b|\bact as\b/i,/\b(expert|senior|specialist)\b/i],tip:"Open with a persona: “You are a senior … with 10 years of experience.”"},Goal:{re:[/\b(create|write|generate|summari[sz]e|analy[sz]e|evaluate|design|perform|convert|build|draft|produce)\b/i,/\b(so that|in order to|objective|task)\b/i],tip:"State one clear task and the outcome you want."},Context:{re:[/\b(for|about|audience|client|background|company|team)\b/i,/\b(project|product|quarter|dataset|candidate|customer)\b/i,/\d+/],tip:"Add audience, situation and facts the AI cannot guess."},Constraints:{re:[/\b(must|only|avoid|do not|never|within|at most|no more than|limit|under \d+)\b/i,/\b\d+\s*(words|items|questions|sentences|points|bullets)\b/i],tip:"Set boundaries: length, exclusions, must-include items."},Format:{re:[/\b(list|table|json|bullet|numbered|markdown|sections?|headings?|format)\b/i,/\b(return|output|respond)\b/i],tip:"Specify the output shape: numbered list, table, JSON, headings…"},Style:{re:[/\b(tone|style|voice|professional|friendly|formal|casual|concise|persuasive)\b/i,/\b(simple|clear|engaging|confident)\b/i],tip:"Name the tone: professional, concise, warm, persuasive…"}};
+const EXP={Role:["No persona is set, so answers default to generic.","A persona is set, anchoring expertise and vocabulary."],Goal:["The task is vague; state exactly what to produce.","The objective is explicit and actionable."],Context:["Little background is given, forcing the AI to guess.","Situational detail grounds the response."],Constraints:["No boundaries; length and scope may drift.","Constraints keep output focused and measurable."],Format:["Output structure is unspecified.","The expected structure is spelled out."],Style:["Tone is unspecified.","Communication style is defined."]};
+const KS=Object.keys(CR),sc=(k,t)=>{const m=CR[k].re.filter(r=>r.test(t)).length,w=t.trim().split(/\s+/).length;let s=t.trim()?[2,6,8,9][Math.min(m,3)]:0;if(k==="Context"&&w>40&&s)s=Math.min(10,s+1);if(m>=3&&w>60)s=10;return s};
+let dom="Business",lv=0,hist=[],busy=false,S="idle";
+const API_URL="http://127.0.0.1:8000"; // <- change to your deployed backend URL (no trailing slash)
+
+// ===== SIGNATURE 1: the Judge Orb (particle sphere -> score digits)
+const cv=$("#orb"),cx=cv.getContext("2d");let W,H,dpr=Math.min(2,devicePixelRatio||1),mx=innerWidth/2,my=innerHeight/2,txt=null,col={d:"#fff",a:"#f60",b:"#58f"};
+const N=innerWidth<700?650:1100,PT=Array.from({length:N},(_,i)=>{const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),t=i*2.39996;return{v:[Math.cos(t)*r,y,Math.sin(t)*r],x:innerWidth/2,y:innerHeight/2,r:Math.random(),a:i%8==0}});
+const O={x:innerWidth*.7,y:innerHeight*.45,r:200};let ry=0,rx=0;
+function rs(){W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0)}rs();addEventListener("resize",rs);
+addEventListener("pointermove",e=>{mx=e.clientX;my=e.clientY});
+function samp(str){const w=Math.min(W,860),h=Math.min(H*.55,420),c=document.createElement("canvas");c.width=w;c.height=h;const g=c.getContext("2d");g.fillStyle="#000";g.font=`800 ${h*.95}px "Bricolage Grotesque",sans-serif`;g.textAlign="center";g.textBaseline="middle";g.fillText(str,w/2,h/2+h*.04);const d=g.getImageData(0,0,w,h).data,p=[];for(let y=0;y<h;y+=5)for(let x=0;x<w;x+=5)if(d[(y*w+x)*4+3]>128)p.push({x:W/2-w/2+x,y:H*.4-h/2+y});for(let i=p.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[p[i],p[j]]=[p[j],p[i]]}return PT.map((_,i)=>p[i%p.length])}
+let fr=0;(function loop(t){fr++;if(fr%20==1){const s=getComputedStyle(document.documentElement);col={d:s.getPropertyValue("--dot").trim(),a:s.getPropertyValue("--b2").trim(),b:s.getPropertyValue("--b1").trim()}}
+cx.clearRect(0,0,W,H);const ov=S==="run"||S==="score",T=ov?{x:W/2,y:H*.4,r:Math.min(W,H)*.2}:scrollY>H*.5?{x:W-52,y:H-52,r:28}:W>900?{x:W*.72,y:H*.46,r:Math.min(W,H)*.3}:{x:W/2,y:H*.66,r:Math.min(W,H)*.24};
+for(const k of["x","y","r"])O[k]+=(T[k]-O[k])*.07;
+ry+=S==="run"?.07:.005+(mx-W/2)/W*.012;rx+=((my-H/2)/H*.6-rx)*.05;const cY=Math.cos(ry),sY=Math.sin(ry),cX=Math.cos(rx),sX=Math.sin(rx),pulse=S==="run"?1+Math.sin(t*.009)*.05:1,band=Math.sin(t*.004),sz=Math.max(.55,O.r/220),al=W<900&&!ov&&scrollY<H*.5?.4:1;
+if(S==="run"){cx.lineWidth=1.5;cx.strokeStyle=col.a;[1,-1].forEach((d,i)=>{cx.globalAlpha=.55;cx.beginPath();cx.ellipse(O.x,O.y,O.r*1.35,O.r*.42,d*t*.0012+i,0,7);cx.stroke()})}
+for(let i=0;i<N;i++){const p=PT[i],v=p.v,x1=v[0]*cY+v[2]*sY,z1=-v[0]*sY+v[2]*cY,y1=v[1]*cX-z1*sX,z2=v[1]*sX+z1*cX;let tx=O.x+x1*O.r*pulse*(1+z2*.25),ty=O.y+y1*O.r*pulse*(1+z2*.25),k=S==="score"?.045+p.r*.07:S==="run"?.3:.12,s=(.8+(z2+1)*.7)*sz,a=(.25+(z2+1)*.38)*al,c=p.a?col.a:col.d;
+if(S==="score"&&txt){tx=txt[i].x;ty=txt[i].y;s=1.7;a=.95;c=p.a?col.a:col.b}
+else{if(S==="run"&&Math.abs(y1-band)<.1){c=col.a;s*=2;a=1}if(!ov){const dx=p.x-mx,dy=p.y-my,d=Math.hypot(dx,dy);if(d<110&&O.r>60){tx+=dx/d*(110-d)*.9;ty+=dy/d*(110-d)*.9}}}
+p.x+=(tx-p.x)*k;p.y+=(ty-p.y)*k;cx.globalAlpha=a;cx.fillStyle=c;cx.beginPath();cx.arc(p.x,p.y,s,0,7);cx.fill()}
+cx.globalAlpha=1;requestAnimationFrame(loop)})(0);
+
+// ===== SIGNATURE 2: variable-font headline reacts to pointer
+const H1=$("#h1");[["Prompts,","judged."],["Then ","perfected."]].forEach((ws,li)=>{const ln=el("div");ws.forEach((w,wi)=>{const g=el("span",wi&&!li?"a":li&&wi?"a":"");g.style.cssText="display:inline-block;white-space:nowrap";[...w].forEach((c,i)=>{const s=el("span","hc",c===" "?"&nbsp;":c);s.style.animationDelay=(li*.5+wi*.25+i*.04)+"s";g.append(s)});if(wi===1||li===0&&wi===0&&false)g.className="a";ln.append(g)});H1.append(ln)});
+const HC=[...document.querySelectorAll(".hc")];let hp=false;addEventListener("pointermove",()=>{if(hp)return;hp=true;requestAnimationFrame(()=>{hp=false;if(scrollY>H)return;HC.forEach(s=>{const r=s.getBoundingClientRect(),d=Math.hypot(mx-(r.left+r.width/2),my-(r.top+r.height/2)),w=300+500*Math.max(0,1-d/190);s.style.fontVariationSettings=`'wght' ${w|0}`})})});
+
+// ===== SIGNATURE 3: circular-reveal theme switch
+const ICON={d:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',l:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'};
+function setTheme(l){document.documentElement.dataset.theme=l?"light":"dark";$("#ti").innerHTML=l?ICON.l:ICON.d}
+$("#tg").onclick=e=>{const l=document.documentElement.dataset.theme==="dark",b=e.currentTarget.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2,R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+try{if(!document.startViewTransition)throw 0;document.startViewTransition(()=>setTheme(l)).ready.then(()=>document.documentElement.animate({clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${R}px at ${x}px ${y}px)`]},{duration:800,easing:"cubic-bezier(.5,0,.2,1)",pseudoElement:"::view-transition-new(root)"}))}catch(_){setTheme(l)}};
+setTheme(matchMedia("(prefers-color-scheme: light)").matches);
+
+// ===== 3D tilt + glare, scroll reveal, odometer
+document.addEventListener("pointermove",e=>{const t=e.target.closest&&e.target.closest(".tilt");document.querySelectorAll(".tilt.hv").forEach(x=>{if(x!==t){x.classList.remove("hv");x.style.transition="transform .7s cubic-bezier(.2,.9,.2,1)";x.style.transform=""}});if(!t)return;const r=t.getBoundingClientRect(),px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;t.classList.add("hv");t.style.transition="transform .12s ease-out";t.style.transform=`perspective(900px) rotateX(${(.5-py)*12}deg) rotateY(${(px-.5)*14}deg) translateZ(14px)`;t.style.setProperty("--gx",px*100+"%");t.style.setProperty("--gy",py*100+"%")});
+const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add("in");io.unobserve(x.target)}}),{threshold:.12});const rvs=r=>r.querySelectorAll(".rv").forEach(e=>io.observe(e));rvs(document);
+const odo=(e,s)=>{s=String(s);e.classList.add("od");e.innerHTML=[...s].map(c=>/\d/.test(c)?`<i data-d="${c}">${"0123456789".replace(/./g,n=>`<b>${n}</b>`)}</i>`:`<u>${c}</u>`).join("");setTimeout(()=>e.querySelectorAll("i").forEach((i,k)=>{i.style.transitionDelay=k*.12+"s";i.style.transform=`translateY(${-i.dataset.d}em)`}),60)};
+
+// ===== challenge + live rings
+function draw(){document.querySelectorAll(".tile").forEach(b=>b.classList.toggle("on",b.dataset.d===dom));document.querySelectorAll("#lv button").forEach((b,i)=>b.classList.toggle("on",i===lv));const b=document.querySelectorAll("#lv button")[lv];$("#li").style.left=b.offsetLeft+"px";$("#li").style.width=b.offsetWidth+"px";const c=$("#ch");c.style.animation="none";c.offsetWidth;c.style.animation="";c.innerHTML=`<small class="mono">${dom} · ${LV[lv]}</small>${SC[dom][lv]}`}
+Object.keys(SC).forEach((d,i)=>{const b=el("button","tilt tile rv",`<span class="mono">0${i+1}</span>${d}`);b.dataset.d=d;b.style.setProperty("--d",i*.08+"s");b.onclick=()=>{dom=d;draw()};$("#tiles").append(b)});
+LV.forEach((l,i)=>{const b=el("button","",l);b.onclick=()=>{lv=i;draw()};$("#lv").append(b)});setTimeout(draw,80);addEventListener("resize",draw);rvs(document);
+KS.forEach(k=>$("#rings").append(el("div","rg",`<svg viewBox="0 0 44 44"><circle class="tr" cx="22" cy="22" r="18"/><circle class="f" id="r${k}" cx="22" cy="22" r="18"/></svg><div class="mono">${k}</div>`)));
+const live=()=>{const t=$("#p").value;KS.forEach(k=>{const s=sc(k,t),f=$("#r"+k);f.style.strokeDashoffset=113.1*(1-s/10);f.closest(".rg").classList.toggle("hit",s>=6)})};$("#p").addEventListener("input",live);
+$("#demo").onclick=()=>{$("#p").value="You are a senior technical recruiter at a fintech startup. "+SC[dom][lv]+" The audience is experienced engineers, so avoid jargon. Keep it under 300 words. Format with headings and bullet points. Use a friendly yet professional tone.";live();location.hash="write"};
+addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")run()});
+
+// DEMO ENGINE: replace with fetch("/evaluate") to your Groq backend
+function evaluate(t,scn){const s={},ex={};KS.forEach(k=>{s[k]=sc(k,t);ex[k]=EXP[k][s[k]>=6?1:0]});const by=KS.slice().sort((a,b)=>s[a]-s[b]);
+const add=KS.filter(k=>s[k]<7).map(k=>({Role:"Act as a senior "+dom+" specialist with 10+ years of experience.",Goal:"Your task: "+scn,Context:"Context: the output is for a busy stakeholder who needs it to be immediately usable.",Constraints:"Constraints: stay under 300 words, avoid jargon, and never invent facts.",Format:"Format: use clear headings and a numbered list.",Style:"Tone: professional, concise and confident."}[k]));
+return{scores:s,explanations:ex,strengths:KS.filter(k=>s[k]>=7).map(k=>k+": "+EXP[k][1]),weaknesses:KS.filter(k=>s[k]<6).map(k=>k+": "+EXP[k][0]),missing:KS.filter(k=>s[k]<4).map(k=>k+" is absent"),recs:by.slice(0,3).map(k=>CR[k].tip),opt:(add.join("\n")+"\n\nOriginal draft:\n"+t.trim()).trim(),overall:Math.round(Object.values(s).reduce((a,b)=>a+b,0)/60*100)}}
+const rate=s=>s>=90?"Excellent":s>=75?"Strong":s>=60?"Good":s>=40?"Needs work":"Beginner";
+
+async function evaluateRemote(t,scn,lvl){
+const res=await fetch(API_URL+"/evaluate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:t,scenario:scn,difficulty:lvl})});
+if(!res.ok)throw new Error("server returned "+res.status);
+const j=await res.json(),s={};KS.forEach(k=>s[k]=Math.max(0,Math.min(10,Math.round(Number((j.scores||{})[k])||0))));
+return{scores:s,explanations:j.explanations||{},strengths:j.strengths||[],weaknesses:j.weaknesses||[],missing:KS.filter(k=>s[k]<4).map(k=>k+" is absent"),recs:j.recommendations||[],opt:String(j.optimized_prompt||""),overall:Math.round(Object.values(s).reduce((a,b)=>a+b,0)/KS.length*10)}}
+// ===== cinematic run: orb spins, scans, then morphs into your score
+async function run(){const t=$("#p").value;if(busy)return;if(!t.trim()){$("#p").focus();$("#p").animate([{transform:"translateX(-10px)"},{transform:"translateX(10px)"},{transform:"none"}],{duration:260,iterations:2});return}
+busy=true;$("#go").disabled=true;S="run";$("#ov").classList.add("on");const cp=$("#cap"),a=$("#c1"),b=$("#c2");cp.classList.add("on");
+const job=evaluateRemote(t,SC[dom][lv],LV[lv]);job.catch(()=>{});
+for(const [x,y] of [["Reading your prompt",(t.trim().split(/\s+/).length)+" words"],["Scoring six criteria",KS.join(" · ")],["Drafting insights","strengths, gaps, fixes"],["Rewriting your prompt","optimizing"]]){a.textContent=x;b.textContent=y;a.animate([{opacity:0,transform:"translateY(16px)"},{opacity:1,transform:"none"}],{duration:400,fill:"both"});await sleep(1000)}
+try{await Promise.race([document.fonts.load('800 100px "Bricolage Grotesque"'),sleep(600)])}catch(_){}
+let r;try{r=await job}catch(e){S="idle";$("#ov").classList.remove("on");cp.classList.remove("on");busy=false;$("#go").disabled=false;alert("Could not reach the evaluator ("+e.message+"). Is the backend running and API_URL correct?");return}
+txt=samp(String(r.overall));S="score";a.innerHTML=`Overall score · <em>${rate(r.overall)}</em>`;b.textContent="out of 100";await sleep(3000);
+hist.push(r.overall);show(r,t);$("#res").scrollIntoView();cp.classList.remove("on");$("#ov").classList.remove("on");await sleep(500);S="idle";txt=null;busy=false;$("#go").disabled=false}
+$("#go").onclick=run;
+
+function show(r,t){const R=$("#res");R.hidden=false;let d=0;const D=()=>(d++*.08).toFixed(2)+"s",ax=KS.map((k,i)=>{const a=-Math.PI/2+i*Math.PI/3;return[Math.cos(a),Math.sin(a),k]}),prev=hist.length>1?r.overall-hist[hist.length-2]:null;
+let h=`<div class="sh rv"><span class="mono">03</span><h2>Report no. ${hist.length}</h2></div><div class="gr"><div class="tilt rv"><div class="mono" style="color:var(--mut)">Overall score</div><div class="big" id="bg"></div><div class="rate">${rate(r.overall)}${prev!==null?` <span style="color:var(--${prev>=0?"b1":"b2"})">${prev>=0?"+":""}${prev}</span>`:""}</div></div>
+<div class="tilt rv" style="--d:.1s"><svg viewBox="0 0 240 240" style="width:100%;max-width:320px;display:block;margin:auto">${[.33,.66,1].map(s=>`<polygon points="${ax.map(a=>`${120+a[0]*90*s},${120+a[1]*90*s}`).join(" ")}" fill="none" stroke="var(--ln)"/>`).join("")}${ax.map(a=>`<line x1="120" y1="120" x2="${120+a[0]*90}" y2="${120+a[1]*90}" stroke="var(--ln)"/><text x="${120+a[0]*108}" y="${124+a[1]*106}" fill="var(--mut)" font-size="11" text-anchor="middle">${a[2]}</text>`).join("")}<polygon id="rp" points="${ax.map(a=>`${120+a[0]*r.scores[a[2]]*9},${120+a[1]*r.scores[a[2]]*9}`).join(" ")}" fill="color-mix(in srgb,var(--b1) 28%,transparent)" stroke="var(--b2)" stroke-width="2.5" style="transform:scale(0) rotate(-60deg);transform-origin:120px 120px;transition:transform 1.4s cubic-bezier(.3,1.4,.4,1) .5s"/></svg></div></div>
+<h3 class="rv">Criteria</h3><div class="rv">${KS.map(k=>`<div class="cr"><div class="t"><b>${k}</b><div class="tr2"><i data-w="${r.scores[k]*10}"></i></div><span data-o="${r.scores[k]}"></span></div><p>${r.explanations[k]}</p></div>`).join("")}</div><h3 class="rv">AI insights</h3><div class="ins">`;
+[["Strength","var(--b1)",r.strengths],["Weakness","var(--b2)",r.weaknesses],["Missing","var(--b2)",r.missing],["Fix","var(--b1)",r.recs]].forEach(([n,c,a])=>a.forEach(x=>h+=`<div class="tilt ic rv" style="--c:${c};--d:${D()}"><small class="mono">${n}</small>${esc(x)}</div>`));
+h+=`</div><h3 class="rv">Optimized prompt</h3><div class="tilt rv"><pre id="op" class="cu"></pre><div class="row" style="margin-top:18px"><button class="btn" id="cp"><span>Copy prompt</span></button><button class="btn o" id="us"><span>Use &amp; re-evaluate</span></button></div></div>`;
+if(hist.length>1){const pts=hist.map((s,i)=>[40+i*(420/(hist.length-1)),170-s*1.5]);h+=`<h3 class="rv">Journey</h3><div class="tilt rv"><svg viewBox="0 0 500 200" style="width:100%"><polyline pathLength="1" points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--b1)" stroke-width="3" stroke-dasharray="1" stroke-dashoffset="1" style="animation:dw 1.6s .4s forwards"/>${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="var(--b2)"/><text x="${p[0]}" y="${p[1]-14}" fill="var(--fg)" font-size="13" text-anchor="middle">${hist[i]}</text>`).join("")}</svg><style>@keyframes dw{to{stroke-dashoffset:0}}</style></div>`}
+R.innerHTML=h;rvs(R);setTimeout(()=>{odo($("#bg"),r.overall);R.querySelectorAll("[data-o]").forEach(e=>odo(e,e.dataset.o));$("#rp").style.transform="none";R.querySelectorAll(".tr2 i").forEach(i=>i.style.width=i.dataset.w+"%")},900);
+R.querySelectorAll(".cr").forEach(c=>c.onclick=()=>c.classList.toggle("open"));
+const ow=new Set(t.toLowerCase().match(/[a-z']+/g)),tk=r.opt.split(/(\s+)/),o=$("#op");let i=0;setTimeout(()=>{const iv=setInterval(()=>{i+=3;o.innerHTML=tk.slice(0,i).map(w=>/\S/.test(w)&&!ow.has(w.toLowerCase().replace(/[^a-z']/g,""))?`<ins>${esc(w)}</ins>`:esc(w)).join("");if(i>=tk.length){clearInterval(iv);o.classList.remove("cu")}},22)},1500);
+$("#cp").onclick=e=>{navigator.clipboard&&navigator.clipboard.writeText(r.opt).catch(()=>{});const s=e.currentTarget.firstChild;s.textContent="Copied ✓";setTimeout(()=>s.textContent="Copy prompt",1400)};
+$("#us").onclick=()=>{$("#p").value=r.opt;live();location.hash="write"}}
+</script>
+</body>
+</html>
